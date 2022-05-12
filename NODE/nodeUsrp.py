@@ -1,5 +1,6 @@
 from .node import Node
 
+from adhoccomputing.Generics import ConnectorTypes
 from adhoccomputing.Networking.PhysicalLayer.UsrpB210OfdmFlexFramePhy import  UsrpB210OfdmFlexFramePhy
 from adhoccomputing.Networking.MacProtocol.CSMA import MacCsmaPPersistent, MacCsmaPPersistentConfigurationParameters
 
