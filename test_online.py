@@ -10,8 +10,8 @@ from NODE.nodeUsrp import NodeUsrp
 
 def main():
     N: int = 4
-    waitTime = 0.1
-    messageCount = 10
+    waitTime = 1e-3 # 1ms
+    messageCount = 100
 
     topo = Topology()
     topo.construct_winslab_topology_with_channels(N, NodeUsrp, FIFOBroadcastPerfectChannel)
@@ -36,9 +36,9 @@ def main():
     throughput  = totalBytesReceived / (waitTime * messageCount)
 
     print("==================================================")
-    print(f"Success Rate: %{successRate*100}")
-    print(f"Failure Rate: %{failureRate*100}")
-    print(f"Throughput: {throughput*8} bps")
+    print(f"Success Rate: {successRate*100}%")
+    print(f"Failure Rate: {failureRate*100}%")
+    print(f"Throughput  : {throughput*8 / 1e3} kbps")
     print("==================================================")
 
 if __name__ == "__main__":

@@ -24,7 +24,7 @@ class ApplicationLayer(GenericModel):
         super().__init__(componentname, componentinstancenumber, context, configurationparameters, num_worker_threads, topology)
         
         self.eventhandlers[ApplicationLayerEventTypes.UNICAST] = self.on_unicast
-        self.processingTime = 0.1
+        self.processingTime = 10e-6 # 10us
 
         self.receivedMessageCount = 0
         self.receivedByteCount = 0
