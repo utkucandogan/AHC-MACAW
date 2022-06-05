@@ -12,8 +12,9 @@ class NodeUsrp(Node):
         # SUBCOMPONENTS
         macconfig     = MacCsmaPPersistentConfigurationParameters(0.5)
 
-        self.phy = UsrpB210OfdmFlexFramePhy("UsrpB210OfdmFlexFramePhy", componentinstancenumber, usrpconfig=sdrconfig, topology=topology)
-        self.mac = MacCsmaPPersistent("MacCsmaPPersistent", componentinstancenumber, configurationparameters=macconfig, uhd=self.phy.ahcuhd, topology=topology)
+        self.phy = UsrpB210OfdmFlexFramePhy("UsrpB210OfdmFlexFramePhy", componentinstancenumber, topology=topology)
+        self.phy.configure()
+        self.mac = MacCsmaPPersistent("MacCsmaPPersistent", componentinstancenumber, configurationparameters=macconfig, topology=topology, uhd=self.phy.ahcuhd)
         
         self.components.append(self.mac)
         self.components.append(self.phy)
