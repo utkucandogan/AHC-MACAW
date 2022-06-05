@@ -10,7 +10,7 @@ class NodeUsrp(Node):
         super().__init__(componentname, componentinstancenumber, context, configurationparameters, num_worker_threads, topology)
         
         # SUBCOMPONENTS
-        macconfig     = MacCsmaPPersistentConfigurationParameters(0.5)
+        macconfig     = MacCsmaPPersistentConfigurationParameters(0.5, -51)
         sdrconfig     = SDRConfiguration(freq =2484000000.0, bandwidth = 20000000, chan = 0, hw_tx_gain = 76.0, hw_rx_gain = 20.0, sw_tx_gain = -12.0)
         bladerfconfig = SDRConfiguration(freq =900000000.0,  bandwidth = 250000,   chan = 0, hw_tx_gain = 50.0, hw_rx_gain = 20.0, sw_tx_gain = -12.0)
 
