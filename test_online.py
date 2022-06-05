@@ -4,7 +4,6 @@ import time, random
 import threading
 
 from adhoccomputing.Experimentation.Topology import Topology
-from adhoccomputing.Networking.LogicalChannels.GenericChannel import FIFOBroadcastPerfectChannel
 
 from NODE.nodeUsrp import NodeUsrp
 
@@ -14,7 +13,7 @@ def main():
     messageCount = 100
 
     topo = Topology()
-    topo.construct_winslab_topology_with_channels(N, NodeUsrp, FIFOBroadcastPerfectChannel)
+    topo.construct_winslab_topology_without_channels(N, NodeUsrp)
 
     topo.start()
     for i in range(messageCount):

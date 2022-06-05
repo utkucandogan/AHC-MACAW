@@ -19,6 +19,10 @@ class NodeUsrp(Node):
         self.components.append(self.mac)
         self.components.append(self.phy)
 
+        # Clear connections before reconnecting
+        self.appl.connectors.clear()
+        self.connectors.clear()
+
         # CONNECTIONS AMONG SUBCOMPONENTS
         self.appl.connect_me_to_component(ConnectorTypes.DOWN, self.mac)
         
