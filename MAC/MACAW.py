@@ -12,6 +12,8 @@ from MAC.config  import MACAWConfigurationParameters
 from MAC.header  import MACAWMessageHeader
 from MAC.timeout import MACAWTimeout
 
+import os
+
 class MACAWMessageType(Enum):
     RTS     = "RTS"
     RRTS    = "RRTS"
@@ -38,6 +40,7 @@ class MACAW(GenericMac):
         super().__init__(componentname, componentinstancenumber, context, configurationparameters, num_worker_threads, topology)
 
         self.slotTime = configurationparameters.slotTime
+        self.verbose  = configurationparameters.verbose
 
         self.state      = MACAWState.IDLE
         self.stateMutex = Lock()
@@ -48,6 +51,10 @@ class MACAW(GenericMac):
         self.sequencenumber = 0
         self.packetOnProcess = None
         self.reservedSender = self.componentinstancenumber # Temporary
+
+    def log(self, str):
+        if self.verbose:
+            print(str)
 
     ## Packet send
     def send_data(self, header, data):
@@ -66,7 +73,7 @@ class MACAW(GenericMac):
 
     ## Event Handlers
     def on_message_from_top(self, eventobj: Event):
-        print(f"[{self.componentname}.{self.componentinstancenumber}] Received a packet from top:")
+        self.log(f"[{self.componentname}.{self.componentinstancenumber}] Received a packet from top:")
         self.framequeue.put_nowait(eventobj.eventcontent)
     
     def on_message_from_bottom(self, eventobj: Event):
@@ -74,25 +81,29 @@ class MACAW(GenericMac):
         messageTo = received.header.messageto
         typ       = received.header.messagetype
 
+        if received.header.messagefrom == self.componentinstancenumber:
+            # Ignore loopback
+            return
+
         self.stateMutex.acquire()
 
         if messageTo == self.componentinstancenumber:
-            print(f"[{self.componentname}.{self.componentinstancenumber}] Received a packet:")
-            print(f"[{self.componentname}.{self.componentinstancenumber}] \tFrom: {received.header.messagefrom}")
-            print(f"[{self.componentname}.{self.componentinstancenumber}] \tType: {received.header.messagetype}")
+            self.log(f"[{self.componentname}.{self.componentinstancenumber}] Received a packet:")
+            self.log(f"[{self.componentname}.{self.componentinstancenumber}] \tFrom: {received.header.messagefrom}")
+            self.log(f"[{self.componentname}.{self.componentinstancenumber}] \tType: {received.header.messagetype}")
 
             # Control rules except for sending
             if self.state == MACAWState.IDLE and typ == MACAWMessageType.RTS:
                 # Check if already received
                 if self.prevACK is not None and \
                     self.prevACK.get_messageid(False) == received.header.get_messageid(True):
-                    print(f"[{self.componentname}.{self.componentinstancenumber}] \tSending ACK...")
+                    self.log(f"[{self.componentname}.{self.componentinstancenumber}] \tSending ACK...")
 
                     # Re-send ack
                     self.send_control(self.prevACK)
 
                 else:
-                    print(f"[{self.componentname}.{self.componentinstancenumber}] \tSending CTS...")
+                    self.log(f"[{self.componentname}.{self.componentinstancenumber}] \tSending CTS...")
 
                     # send CTS
                     header = received.header.create_response(MACAWMessageType.CTS)
@@ -104,7 +115,7 @@ class MACAW(GenericMac):
 
             elif (self.state == MACAWState.CONTENDs or self.state == MACAWState.CONTENDr or self.state == MACAWState.WFCTS_Retry) \
                     and typ == MACAWMessageType.RTS:
-                print(f"[{self.componentname}.{self.componentinstancenumber}] \tSending CTS...")
+                self.log(f"[{self.componentname}.{self.componentinstancenumber}] \tSending CTS...")
 
                 self.timer.reset()
 
@@ -117,7 +128,7 @@ class MACAW(GenericMac):
                 self.timer.start_wait()
 
             elif (self.state == MACAWState.WFCTS or self.state == MACAWState.WFACK) and typ == MACAWMessageType.CTS:
-                print(f"[{self.componentname}.{self.componentinstancenumber}] \tSending DS & DATA...")
+                self.log(f"[{self.componentname}.{self.componentinstancenumber}] \tSending DS & DATA...")
 
                 # clear the timer
                 self.timer.reset()
@@ -136,7 +147,7 @@ class MACAW(GenericMac):
                 self.timer.start_backoff()
 
             elif self.state == MACAWState.WFDS and typ == MACAWMessageType.DS:
-                print(f"[{self.componentname}.{self.componentinstancenumber}] \tPreparing to listen...")
+                self.log(f"[{self.componentname}.{self.componentinstancenumber}] \tPreparing to listen...")
 
                 self.timer.reset()
 
@@ -147,7 +158,7 @@ class MACAW(GenericMac):
                 self.timer.start_slot(deferral+1)
 
             elif self.state == MACAWState.WFData and typ == MACAWMessageType.DATA:
-                print(f"[{self.componentname}.{self.componentinstancenumber}] \tSending ACK...")
+                self.log(f"[{self.componentname}.{self.componentinstancenumber}] \tSending ACK...")
 
                 # clear the timer
                 self.timer.reset()
@@ -162,7 +173,9 @@ class MACAW(GenericMac):
                 self.state = MACAWState.IDLE
 
             elif self.state == MACAWState.WFACK and typ == MACAWMessageType.ACK:
-                print(f"[{self.componentname}.{self.componentinstancenumber}] \tEnding connection...")
+                self.log(f"[{self.componentname}.{self.componentinstancenumber}] \tEnding connection...")
+
+                self.packetOnProcess = None
 
                 # clear the timer
                 self.timer.reset()
@@ -176,7 +189,7 @@ class MACAW(GenericMac):
                 self.reservedSender = received.header.messagefrom
 
             elif self.state == MACAWState.IDLE and typ == MACAWMessageType.RRTS:
-                print(f"[{self.componentname}.{self.componentinstancenumber}] \tSending RTS...")
+                self.log(f"[{self.componentname}.{self.componentinstancenumber}] \tSending RTS...")
 
                 # send RTS
                 header = MACAWMessageHeader(MACAWMessageType.RTS, self.componentinstancenumber,
@@ -185,31 +198,31 @@ class MACAW(GenericMac):
                 
                 self.state = MACAWState.WFCTS
             else:
-                print(f"[{self.componentname}.{self.componentinstancenumber}] \tUnknown packet. Discarding...")
-                print(f"[{self.componentname}.{self.componentinstancenumber}] \tMy state is <{self.state}>")
+                self.log(f"[{self.componentname}.{self.componentinstancenumber}] \tUnknown packet. Discarding...")
+                self.log(f"[{self.componentname}.{self.componentinstancenumber}] \tMy state is <{self.state}>")
                 pass
 
         else:
-            print(f"[{self.componentname}.{self.componentinstancenumber}] Overheard a packet.")
+            self.log(f"[{self.componentname}.{self.componentinstancenumber}] Overheard a packet.")
 
             if self.state == MACAWState.IDLE or self.state == MACAWState.CONTENDr or self.state == MACAWState.CONTENDs:
                 # Deferral Rules
                 if typ == MACAWMessageType.RTS or typ == MACAWMessageType.RRTS:
-                    if self.timer.isRunning(): self.timer.reset()
+                    self.timer.reset()
 
                     # set timer until CTS
                     self.state = MACAWState.QUIET
                     self.timer.start_slot(1)
 
                 elif typ == MACAWMessageType.RRTS:
-                    if self.timer.isRunning(): self.timer.reset()
+                    self.timer.reset()
 
                     # set timer until RTS&CTS
                     self.state = MACAWState.QUIET
                     self.timer.start_slot(2)
 
                 elif typ == MACAWMessageType.DS or typ == MACAWMessageType.CTS:
-                    if self.timer.isRunning(): self.timer.reset()
+                    self.timer.reset()
 
                     # Copy backoff if it is smaller
                     backoff = received.header.senderbackoff
@@ -230,32 +243,37 @@ class MACAW(GenericMac):
         self.stateMutex.release()
     
     def handle_frame(self):
+        self.stateMutex.acquire()
         if self.state == MACAWState.IDLE and not self.framequeue.empty():
-            print(f"[{self.componentname}.{self.componentinstancenumber}] Going to Contend...")
+            self.log(f"[{self.componentname}.{self.componentinstancenumber}] Going to Contend...")
+
+            self.timer.reset()
 
             # get from queue
-            self.packetOnProcess = self.framequeue.get_nowait()
+            if self.packetOnProcess is None:
+                self.packetOnProcess = self.framequeue.get_nowait()
 
             # set a random timer
             self.state = MACAWState.CONTENDs
             self.timer.start_contend()
 
+        self.stateMutex.release()
         # Continuously trigger handle_frame
         Timer(self.slotTime, lambda s: s.send_self(Event(s, GenericMacEventTypes.HANDLEMACFRAME, None)), [self]).start()
 
     def timeout(self):
-        print(f"[{self.componentname}.{self.componentinstancenumber}] Timeout...")
-
         self.stateMutex.acquire()
 
+        self.log(f"[{self.componentname}.{self.componentinstancenumber}] Timeout...")
+
         if self.state == MACAWState.WFContend:
-            print(f"[{self.componentname}.{self.componentinstancenumber}] \tGoing to Contend...")
+            self.log(f"[{self.componentname}.{self.componentinstancenumber}] \tGoing to Contend...")
             # set a random timer
             self.state = MACAWState.CONTENDr
             self.timer.start_contend()
 
         elif self.state == MACAWState.CONTENDs:
-            print(f"[{self.componentname}.{self.componentinstancenumber}] \tSending RTS to <{self.packetOnProcess.header.messageto}>...")
+            self.log(f"[{self.componentname}.{self.componentinstancenumber}] \tSending RTS to <{self.packetOnProcess.header.messageto}>...")
 
             # Send RTS
             self.sequencenumber += 1
@@ -267,7 +285,7 @@ class MACAW(GenericMac):
             self.timer.start_backoff()
 
         elif self.state == MACAWState.CONTENDr:
-            print(f"[{self.componentname}.{self.componentinstancenumber}] \tSending RRTS to <{self.reservedSender}>...")
+            self.log(f"[{self.componentname}.{self.componentinstancenumber}] \tSending RRTS to <{self.reservedSender}>...")
 
             # send RRTS
             header = self.get_rrts_header()
@@ -276,7 +294,7 @@ class MACAW(GenericMac):
             self.state = MACAWState.IDLE
 
         elif self.state == MACAWState.WFCTS or self.state == MACAWState.WFACK:
-            print(f"[{self.componentname}.{self.componentinstancenumber}] \tRe-sending RTS to <{self.packetOnProcess.header.messageto}>...")
+            self.log(f"[{self.componentname}.{self.componentinstancenumber}] \tRe-sending RTS to <{self.packetOnProcess.header.messageto}>...")
 
             # Backoff and resend RTS
             self.backoff.increase()
@@ -288,7 +306,7 @@ class MACAW(GenericMac):
             self.timer.start_backoff()
 
         else:
-            print(f"[{self.componentname}.{self.componentinstancenumber}] \tGoing IDLE.")
+            self.log(f"[{self.componentname}.{self.componentinstancenumber}] \tGoing IDLE.")
 
             self.state = MACAWState.IDLE
 

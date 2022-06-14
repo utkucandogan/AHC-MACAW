@@ -27,20 +27,22 @@ def fully_connected_topology(topo, nodecount, nodetype, channeltype, context=Non
 
 def main():
     N: int = 4
-    waitTime = 200e-3 # 1ms
+    waitTime = 10e-3 # 1ms
     messageCount = 100
+    queueWait = 60
 
     topo = Topology()
     fully_connected_topology(topo, N, Node, FIFOBroadcastPerfectChannel)
 
     topo.start()
+    time.sleep(5)
     for i in range(messageCount):
         messagefrom, messageto = random.sample(range(N), 2)
 
         topo.nodes[messagefrom].unicast(messageto, f"MY MESSAGE #{i}")
         time.sleep(waitTime)
 
-    time.sleep(5)
+    time.sleep(queueWait - 5)
 
     totalMessageReceived = 0
     totalBytesReceived = 0
@@ -50,7 +52,7 @@ def main():
 
     successRate = totalMessageReceived / messageCount
     failureRate = 1 - successRate
-    throughput  = totalBytesReceived / (waitTime * messageCount)
+    throughput  = totalBytesReceived / (waitTime * messageCount + queueWait)
 
     print("==================================================")
     print(f"Success Rate: {successRate*100}%")

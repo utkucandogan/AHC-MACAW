@@ -10,6 +10,7 @@ def main():
     N: int = 4
     waitTime = 10e-3 # 1ms
     messageCount = 100
+    queueWait = 60
 
     topo = Topology()
     topo.construct_winslab_topology_without_channels(N, NodeUsrp)
@@ -22,7 +23,7 @@ def main():
         topo.nodes[messagefrom].unicast(messageto, f"MY MESSAGE #{i}")
         time.sleep(waitTime)
 
-    time.sleep(5)
+    time.sleep(queueWait - 5)
 
     totalMessageReceived = 0
     totalBytesReceived = 0
@@ -32,7 +33,7 @@ def main():
 
     successRate = totalMessageReceived / messageCount
     failureRate = 1 - successRate
-    throughput  = totalBytesReceived / (waitTime * messageCount)
+    throughput  = totalBytesReceived / (waitTime * messageCount + queueWait)
 
     print("==================================================")
     print(f"Success Rate: {successRate*100}%")

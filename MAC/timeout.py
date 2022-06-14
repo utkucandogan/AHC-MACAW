@@ -52,5 +52,6 @@ class MACAWTimeout:
         self.start_slot(slots)
 
     def reset(self):
-        self._timer.cancel()
-        self._timer = None
+        if self.isRunning():
+            self._timer.cancel()
+            self._timer = None
