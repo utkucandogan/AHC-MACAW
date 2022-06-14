@@ -65,11 +65,11 @@ class MACAW(GenericMac):
 
     def get_rts_header(self):
         return MACAWMessageHeader(MACAWMessageType.RTS, self.componentinstancenumber, self.packetOnProcess.header.messageto,
-            self.sequencenumber, 5, self.backoff.get())
+            self.sequencenumber, 3, self.backoff.get())
 
     def get_rrts_header(self):
         return MACAWMessageHeader(MACAWMessageType.RRTS, self.componentinstancenumber, self.reservedSender,
-            -1, 5, self.backoff.get())
+            -1, 3, self.backoff.get())
 
     ## Event Handlers
     def on_message_from_top(self, eventobj: Event):

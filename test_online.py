@@ -8,9 +8,9 @@ from NODE.nodeUsrp import NodeUsrp
 
 def main():
     N: int = 4
-    waitTime = 10e-3 # 1ms
+    waitTime = 1000e-3 # 1ms
     messageCount = 100
-    queueWait = 60
+    queueWait = 6
 
     topo = Topology()
     topo.construct_winslab_topology_without_channels(N, NodeUsrp)
