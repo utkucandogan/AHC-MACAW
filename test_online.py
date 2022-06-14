@@ -9,7 +9,7 @@ from NODE.nodeUsrp import NodeUsrp
 def main():
     N: int = 4
     waitTime = 1000e-3 # 1ms
-    messageCount = 100
+    messageCount = 10
     queueWait = 6
 
     topo = Topology()
