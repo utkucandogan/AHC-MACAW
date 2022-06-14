@@ -2,6 +2,9 @@ from adhoccomputing.GenericModel import GenericModel
 from adhoccomputing.Generics import Event, EventTypes, ConnectorTypes, GenericMessageHeader, GenericMessage
 from adhoccomputing.Networking.MacProtocol.CSMA import MacCsmaPPersistent, MacCsmaPPersistentConfigurationParameters
 
+import MAC
+from MAC.MACAW import MACAW, MACAWConfigurationParameters
+
 from .appl import ApplicationLayer, ApplicationLayerEventTypes, ApplicationLayerMessageHeader
 
 class Node(GenericModel):
@@ -11,12 +14,18 @@ class Node(GenericModel):
 
         # SUBCOMPONENTS
         self.appl = ApplicationLayer("ApplicationLayer", componentinstancenumber, topology=topology)
+        self.mac  = MACAW("MACAWMACLayer",componentinstancenumber, topology=topology)
+
         self.components.append(self.appl)
+        self.components.append(self.mac)
 
         # CONNECTIONS AMONG SUBCOMPONENTS
-        self.appl.connect_me_to_component(ConnectorTypes.DOWN, self)
+        self.appl.connect_me_to_component(ConnectorTypes.DOWN, self.mac)
 
-        self.connect_me_to_component(ConnectorTypes.UP, self.appl)
+        self.mac.connect_me_to_component(ConnectorTypes.UP, self.appl)
+        self.mac.connect_me_to_component(ConnectorTypes.DOWN, self)
+
+        self.connect_me_to_component(ConnectorTypes.UP, self.mac)
         
     def on_init(self, eventobj: Event):
         pass

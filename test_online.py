@@ -8,7 +8,7 @@ from NODE.nodeUsrp import NodeUsrp
 
 def main():
     N: int = 4
-    waitTime = 1e-3 # 1ms
+    waitTime = 200e-3 # 1ms
     messageCount = 100
 
     topo = Topology()
@@ -21,7 +21,7 @@ def main():
         topo.nodes[messagefrom].unicast(messageto, f"MY MESSAGE #{i}")
         time.sleep(waitTime)
 
-    time.sleep(1)
+    time.sleep(5)
 
     totalMessageReceived = 0
     totalBytesReceived = 0

@@ -40,13 +40,13 @@ class ApplicationLayer(GenericModel):
             return
 
         print(f"[{self.componentname}.{self.componentinstancenumber}] Received a packet:")
-        print(f"\tFrom: {eventobj.eventcontent.header.messagefrom}")
-        print(f"\tType: {eventobj.eventcontent.header.messagetype}")
+        print(f"[{self.componentname}.{self.componentinstancenumber}] \tFrom: {eventobj.eventcontent.header.messagefrom}")
+        print(f"[{self.componentname}.{self.componentinstancenumber}] \tType: {eventobj.eventcontent.header.messagetype}")
 
         typ = eventobj.eventcontent.header.messagetype
         if typ == ApplicationLayerMessageTypes.DATA:
-            print(f"\tData: \"{eventobj.eventcontent.payload}\"")
-            print(f"Acknowledging data...")
+            print(f"[{self.componentname}.{self.componentinstancenumber}] \tData: \"{eventobj.eventcontent.payload}\"")
+            print(f"[{self.componentname}.{self.componentinstancenumber}] Acknowledging data...")
 
             header = ApplicationLayerMessageHeader(ApplicationLayerMessageTypes.ACK, self.componentinstancenumber, eventobj.eventcontent.header.messagefrom)
             time.sleep(self.processingTime)
@@ -56,16 +56,16 @@ class ApplicationLayer(GenericModel):
             self.receivedByteCount += len(str(eventobj.eventcontent.payload))
 
         elif typ == ApplicationLayerMessageTypes.ACK:
-            print(f"\tMessage sent.")
+            print(f"[{self.componentname}.{self.componentinstancenumber}] \tMessage sent.")
             
         else:
-            print(f"\t[Error] Event Type is unknown! Received packet will not be processed.")
+            print(f"[{self.componentname}.{self.componentinstancenumber}] \t[Error] Event Type is unknown! Received packet will not be processed.")
             return
     
     def on_unicast(self, eventobj: Event):
         print(f"[{self.componentname}.{self.componentinstancenumber}] Sending Unicast message:")
-        print(f"\tTo: {eventobj.eventcontent.header.messageto}")
-        print(f"\tContent: \"{eventobj.eventcontent.payload}\"")
+        print(f"[{self.componentname}.{self.componentinstancenumber}] \tTo: {eventobj.eventcontent.header.messageto}")
+        print(f"[{self.componentname}.{self.componentinstancenumber}] \tContent: \"{eventobj.eventcontent.payload}\"")
 
         self.idle = False
         self.conn = eventobj.eventcontent.header.messageto
