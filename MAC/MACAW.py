@@ -87,6 +87,8 @@ class MACAW(GenericMac):
 
         self.stateMutex.acquire()
 
+        time.sleep(10e-3)
+
         if messageTo == self.componentinstancenumber:
             self.log(f"[{self.componentname}.{self.componentinstancenumber}] Received a packet:")
             self.log(f"[{self.componentname}.{self.componentinstancenumber}] \tFrom: {received.header.messagefrom}")
@@ -244,7 +246,7 @@ class MACAW(GenericMac):
     
     def handle_frame(self):
         self.stateMutex.acquire()
-        if self.state == MACAWState.IDLE and not self.framequeue.empty():
+        if self.state == MACAWState.IDLE and (not self.framequeue.empty() or self.packetOnProcess is not None):
             self.log(f"[{self.componentname}.{self.componentinstancenumber}] Going to Contend...")
 
             self.timer.reset()
