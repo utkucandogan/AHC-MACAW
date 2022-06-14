@@ -8,13 +8,14 @@ from NODE.nodeUsrp import NodeUsrp
 
 def main():
     N: int = 4
-    waitTime = 200e-3 # 1ms
+    waitTime = 10e-3 # 1ms
     messageCount = 100
 
     topo = Topology()
     topo.construct_winslab_topology_without_channels(N, NodeUsrp)
 
     topo.start()
+    time.sleep(5)
     for i in range(messageCount):
         messagefrom, messageto = random.sample(range(N), 2)
 
