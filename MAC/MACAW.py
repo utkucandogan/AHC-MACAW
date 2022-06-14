@@ -246,6 +246,7 @@ class MACAW(GenericMac):
     
     def handle_frame(self):
         self.stateMutex.acquire()
+
         if self.state == MACAWState.IDLE and (not self.framequeue.empty() or self.packetOnProcess is not None):
             self.log(f"[{self.componentname}.{self.componentinstancenumber}] Going to Contend...")
 
@@ -265,6 +266,8 @@ class MACAW(GenericMac):
 
     def timeout(self):
         self.stateMutex.acquire()
+
+        time.sleep(10e-3)
 
         self.log(f"[{self.componentname}.{self.componentinstancenumber}] Timeout...")
 
@@ -295,7 +298,7 @@ class MACAW(GenericMac):
 
             self.state = MACAWState.IDLE
 
-        elif self.state == MACAWState.WFCTS or self.state == MACAWState.WFACK:
+        elif self.state == MACAWState.WFCTS or self.state == MACAWState.WFCTS_Retry or self.state == MACAWState.WFACK:
             self.log(f"[{self.componentname}.{self.componentinstancenumber}] \tRe-sending RTS to <{self.packetOnProcess.header.messageto}>...")
 
             # Backoff and resend RTS
