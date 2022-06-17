@@ -9,7 +9,7 @@ class NodeUsrp(Node):
         super().__init__(componentname, componentinstancenumber, context, configurationparameters, num_worker_threads, topology)
         
         # SUBCOMPONENTS
-        sdrconfig = SDRConfiguration(freq =2484000000.0, bandwidth = 20000000, chan = 0, hw_tx_gain = 76, hw_rx_gain = 20, sw_tx_gain = -12.0)
+        #sdrconfig = SDRConfiguration(freq =2484000000.0, bandwidth = 20000000, chan = 0, hw_tx_gain = 76, hw_rx_gain = 20, sw_tx_gain = -12.0)
         self.phy  = UsrpB210OfdmFlexFramePhy("UsrpB210OfdmFlexFramePhy", componentinstancenumber, usrpconfig=sdrconfig, topology=topology)
         self.components.append(self.phy)
 

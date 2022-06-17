@@ -29,7 +29,7 @@ def main():
     N: int = 4
     waitTime = 10e-3 # 1ms
     messageCount = 100
-    queueWait = 60
+    queueWait = 240
 
     topo = Topology()
     fully_connected_topology(topo, N, Node, FIFOBroadcastPerfectChannel)
